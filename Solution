@@ -57,5 +57,4 @@ def all_files():
         read_csv('./data2/loan{}.txt'.format(i))
         emi = loan_emi(item_dict)
         item_dict['emi'] = np.round(emi,1)
-        write_csv('./data2/emi{}.txt' .format(i), item_dict)
         
