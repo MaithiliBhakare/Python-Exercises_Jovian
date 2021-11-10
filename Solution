@@ -1,0 +1,61 @@
+import os
+import numpy as np
+import urllib.request
+import math
+os.makedirs('./data2', exist_ok=True)
+url1 = 'https://gist.githubusercontent.com/aakashns/257f6e6c8719c17d0e498ea287d1a386/raw/7def9ef4234ddf0bc82f855ad67dac8b971852ef/loans1.txt'
+url2 = 'https://gist.githubusercontent.com/aakashns/257f6e6c8719c17d0e498ea287d1a386/raw/7def9ef4234ddf0bc82f855ad67dac8b971852ef/loans2.txt'
+url3 = 'https://gist.githubusercontent.com/aakashns/257f6e6c8719c17d0e498ea287d1a386/raw/7def9ef4234ddf0bc82f855ad67dac8b971852ef/loans3.txt'
+from urllib.request import urlretrieve
+urlretrieve(url1, './data2/loan1.txt')
+urlretrieve(url2, './data2/loan2.txt')
+urlretrieve(url3, './data2/loan3.txt')
+def parse_header(data):
+    return data.strip().split(',')
+
+def parse_values(data_line):
+    values = []
+    for lines in data_line[1:]:
+        for item in lines.strip().split(','):
+            if item == '':
+                values.append(0.0)
+            else:
+                try:
+                    values.append(float(item))
+                except ValueError:
+                    values.append(item)
+    return values
+
+def create_dict(values, headers):
+    results = {}
+    for value, header in zip(values, headers):
+        results[header] = value
+    return results
+def read_csv(path):
+    with open(path) as file:
+        file_lines = file.readlines()
+        return file_lines
+    header = parse_header(file_lines[0])
+    values = parse_values(file_lines)
+    arr1  = np.array(values)
+    arr2 = np.reshape(arr1, (len(header), len(file_lines[1:])), order = 'F')
+    item_dict = create_dict(arr2, header)
+    return item_dict
+
+def loan_emi(arr):
+    amount = item_dict['amount']
+    duration = item_dict['duration']
+    rate = item_dict['rate']/12
+    down_payment = item_dict['down_payment']
+    
+    loan_amount = amount - down_payment
+    emi = loan_amount*rate*((1+rate)**duration)/(((1+rate)**duration)-1)
+    return emi
+
+def all_files():
+    for i in range(1,4):
+        read_csv('./data2/loan{}.txt'.format(i))
+        emi = loan_emi(item_dict)
+        item_dict['emi'] = np.round(emi,1)
+        write_csv('./data2/emi{}.txt' .format(i), item_dict)
+        
